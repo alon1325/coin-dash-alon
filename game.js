@@ -62,6 +62,8 @@ class CoinDash extends Phaser.Scene {
     this.add.grid(c.width / 2, c.height / 2, c.width, c.height, 40, 40,
       c.colors.background, 1, 0x24334b, 0.45);
     this.hud = this.add.text(18, 12, '', { font: '18px monospace', color: '#ffffff' });
+    this.scoreText = this.add.text(c.width / 2, 22, 'Score: 0',
+      { font: 'bold 24px monospace', color: '#ffd166' }).setOrigin(0.5);
     this.aimLines = this.add.graphics();
     this.makeBirdTextures();
     this.player = this.add.image(c.width / 2, c.height / 2, 'bird-down').setScale(0.75);
@@ -92,6 +94,9 @@ class CoinDash extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.coin, () => {
       if (this.finished) return;
       this.score++;
+      this.scoreText.setText(`Score: ${this.score}`);
+      // Quick pop so each pickup is noticeable.
+      this.tweens.add({ targets: this.scoreText, scale: { from: 1.3, to: 1 }, duration: 150 });
       this.placeCoin();
     });
     this.physics.add.overlap(this.player, this.drones, () => this.finish('A skull caught you!'));
@@ -171,7 +176,8 @@ class CoinDash extends Phaser.Scene {
     this.animateBird(time, dx, dy);
     this.updateDrones(time, delta / 1000);
     const seconds = Math.max(0, Math.ceil((this.deadline - this.time.now) / 1000));
-    this.hud.setText(`Coins: ${this.score}        ${this.level.label}        Time: ${seconds}s`);
+    // Score has its own counter in the centre, so the left HUD keeps only difficulty and time.
+    this.hud.setText(`${this.level.label}  ·  Time: ${seconds}s`);
     if (seconds === 0) this.finish('Time is up!');
   }
 
