@@ -63,8 +63,11 @@ class CoinDash extends Phaser.Scene {
       c.colors.background, 1, 0x24334b, 0.45);
     this.hud = this.add.text(18, 12, '', { font: '18px monospace', color: '#ffffff' });
     this.aimLines = this.add.graphics();
-    this.player = this.add.rectangle(c.width / 2, c.height / 2, 24, 24, c.colors.player);
+    this.makeBirdTextures();
+    this.player = this.add.image(c.width / 2, c.height / 2, 'bird-down').setScale(0.75);
     this.physics.add.existing(this.player);
+    // Hitbox covers the round body only, not the beak or tail (texture pixels, before scaling).
+    this.player.body.setCircle(14, 8, 8);
     this.player.body.setCollideWorldBounds(true);
     this.coin = this.add.circle(100, 100, 9, c.colors.coin);
     this.physics.add.existing(this.coin);
@@ -115,6 +118,36 @@ class CoinDash extends Phaser.Scene {
     g.destroy();
   }
 
+  // Draws a right-facing bird twice, wing up and wing down, as 48x40 'bird-up'/'bird-down' textures.
+  makeBirdTextures() {
+    if (this.textures.exists('bird-up')) return;
+    const c = COIN_DASH;
+    const ink = 0x2b2140;
+    [['bird-up', [14, 21, 30, 21, 17, 3]], ['bird-down', [14, 23, 30, 23, 19, 37]]].forEach(([key, wing]) => {
+      const g = this.make.graphics({ x: 0, y: 0 }, false);
+      g.fillStyle(ink).fillTriangle(10, 22, 0, 12, 1, 30);
+      g.fillStyle(c.colors.player).fillTriangle(10, 22, 3, 15, 3, 28);
+      g.fillStyle(c.colors.coin).lineStyle(2, ink)
+        .fillTriangle(34, 17, 47, 22, 34, 27).strokeTriangle(34, 17, 47, 22, 34, 27);
+      g.fillStyle(ink).fillEllipse(22, 22, 32, 28);
+      g.fillStyle(c.colors.player).fillEllipse(22, 22, 28, 24);
+      g.fillStyle(c.colors.belly).fillEllipse(20, 27, 18, 10);
+      g.fillStyle(0xffffff).fillCircle(29, 17, 5);
+      g.fillStyle(ink).fillCircle(30, 17, 2.5);
+      g.fillStyle(c.colors.wing).fillTriangle(...wing).lineStyle(2, ink).strokeTriangle(...wing);
+      g.generateTexture(key, 48, 40);
+      g.destroy();
+    });
+  }
+
+  // Flaps quickly while flying, slowly while hovering; faces and tilts with the movement.
+  animateBird(time, dx, dy) {
+    const flapMs = dx || dy ? 90 : 260;
+    this.player.setTexture(Math.floor(time / flapMs) % 2 ? 'bird-up' : 'bird-down');
+    if (dx) this.player.setFlipX(dx < 0);
+    this.player.setAngle(dy * 15 * (this.player.flipX ? -1 : 1));
+  }
+
   placeCoin() {
     const c = COIN_DASH;
     // Avoid spawning the next coin directly underneath the player.
@@ -135,6 +168,7 @@ class CoinDash extends Phaser.Scene {
       - Number(this.cursors.up.isDown || this.keys.W.isDown);
     const direction = new Phaser.Math.Vector2(dx, dy).normalize().scale(COIN_DASH.playerSpeed);
     this.player.body.setVelocity(direction.x, direction.y);
+    this.animateBird(time, dx, dy);
     this.updateDrones(time, delta / 1000);
     const seconds = Math.max(0, Math.ceil((this.deadline - this.time.now) / 1000));
     this.hud.setText(`Coins: ${this.score}        ${this.level.label}        Time: ${seconds}s`);
