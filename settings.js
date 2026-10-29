@@ -3,7 +3,7 @@ window.COIN_DASH = {
   width: 800,
   height: 500,
   roundSeconds: 20,
-  playerSpeed: 480,
+  playerSpeed: 360,
   defaultDifficulty: 'normal',
   // brain: 'bounce' drifts and bounces, 'chase' steers toward the player,
   // 'hunter' stops to predict where the player will be, then rushes that spot.
