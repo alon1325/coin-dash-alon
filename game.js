@@ -1,4 +1,50 @@
 /* global Phaser, COIN_DASH */
+// Draws the backyard (sky, sun, clouds, hills, fence, lawn) once as the 'yard' texture and adds it.
+function addYard(scene) {
+  const c = COIN_DASH;
+  const y = c.colors.yard;
+  if (!scene.textures.exists('yard')) {
+    const w = c.width, h = c.height, horizon = Math.round(h * 0.62);
+    const g = scene.make.graphics({ x: 0, y: 0 }, false);
+    // Sky fades from deep blue at the top to pale blue at the horizon, in thin bands.
+    const top = Phaser.Display.Color.IntegerToColor(y.skyTop), low = Phaser.Display.Color.IntegerToColor(y.skyLow);
+    for (let i = 0; i < horizon; i += 4) {
+      const mix = Phaser.Display.Color.Interpolate.ColorWithColor(top, low, horizon, i);
+      g.fillStyle(Phaser.Display.Color.GetColor(mix.r, mix.g, mix.b)).fillRect(0, i, w, 4);
+    }
+    g.fillStyle(y.sun, 0.25).fillCircle(w - 110, 95, 46);
+    g.fillStyle(y.sun).fillCircle(w - 110, 95, 32);
+    [[120, 110, 1], [380, 95, 0.8], [560, 150, 0.65]].forEach(([cx, cy, s]) => {
+      g.fillStyle(0xffffff).fillEllipse(cx, cy, 120 * s, 34 * s)
+        .fillCircle(cx - 22 * s, cy - 12 * s, 22 * s).fillCircle(cx + 14 * s, cy - 16 * s, 26 * s);
+    });
+    g.fillStyle(y.hills).fillEllipse(140, horizon + 10, 420, 120).fillEllipse(560, horizon + 14, 520, 110);
+    g.fillStyle(y.grass).fillRect(0, horizon, w, h - horizon);
+    // Mown stripes across the lawn.
+    for (let i = 0; i < 6; i++) {
+      g.fillStyle(i % 2 ? y.grass : y.grassDark).fillRect(0, horizon + 24 + i * 26, w, 26);
+    }
+    // Picket fence along the horizon.
+    g.fillStyle(y.fence).fillRect(0, horizon - 22, w, 6).fillRect(0, horizon - 6, w, 6);
+    for (let x = 6; x < w; x += 26) {
+      g.fillRect(x, horizon - 34, 14, 40).fillTriangle(x, horizon - 34, x + 14, horizon - 34, x + 7, horizon - 42);
+    }
+    g.fillStyle(y.grassDark);
+    for (let i = 0; i < 70; i++) {
+      const tx = Phaser.Math.Between(0, w), ty = Phaser.Math.Between(horizon + 8, h);
+      g.fillTriangle(tx - 3, ty, tx + 3, ty, tx, ty - 8);
+    }
+    [[70, 440], [250, 395], [470, 465], [690, 410], [740, 480]].forEach(([fx, fy]) => {
+      g.fillStyle(y.flower).fillCircle(fx - 3, fy, 3).fillCircle(fx + 3, fy, 3)
+        .fillCircle(fx, fy - 3, 3).fillCircle(fx, fy + 3, 3);
+      g.fillStyle(y.sun).fillCircle(fx, fy, 2);
+    });
+    g.generateTexture('yard', w, h);
+    g.destroy();
+  }
+  return scene.add.image(0, 0, 'yard').setOrigin(0);
+}
+
 class DifficultyMenu extends Phaser.Scene {
   constructor() { super('DifficultyMenu'); }
 
@@ -6,10 +52,9 @@ class DifficultyMenu extends Phaser.Scene {
     const c = COIN_DASH;
     const keys = Object.keys(c.difficulties);
     this.choice = Math.max(0, keys.indexOf(this.registry.get('difficulty') || c.defaultDifficulty));
-    this.add.grid(c.width / 2, c.height / 2, c.width, c.height, 40, 40,
-      c.colors.background, 1, 0x24334b, 0.45);
-    this.add.text(c.width / 2, 70, 'Choose a difficulty', { font: '32px monospace', color: '#ffffff' })
-      .setOrigin(0.5);
+    addYard(this);
+    this.add.text(c.width / 2, 70, 'Choose a difficulty',
+      { font: '32px monospace', color: '#ffffff', stroke: '#2b2140', strokeThickness: 5 }).setOrigin(0.5);
     this.rows = keys.map((key, i) => {
       const d = c.difficulties[key];
       const y = 150 + i * 80;
@@ -22,8 +67,8 @@ class DifficultyMenu extends Phaser.Scene {
       box.on('pointerdown', () => this.start(key));
       return { key, box };
     });
-    this.add.text(c.width / 2, c.height - 30, '1-4 or ↑/↓ + Enter', { font: '15px monospace', color: '#9fb0c8' })
-      .setOrigin(0.5);
+    this.add.text(c.width / 2, c.height - 30, '1-4 or ↑/↓ + Enter',
+      { font: '15px monospace', color: '#ffffff', stroke: '#2b2140', strokeThickness: 4 }).setOrigin(0.5);
     ['ONE', 'TWO', 'THREE', 'FOUR'].slice(0, keys.length).forEach((name, i) =>
       this.input.keyboard.on(`keydown-${name}`, () => this.start(keys[i])));
     this.input.keyboard.on('keydown-UP', () => this.select((this.choice + keys.length - 1) % keys.length));
@@ -59,8 +104,9 @@ class CoinDash extends Phaser.Scene {
     this.finished = false;
     this.deadline = this.time.now + c.roundSeconds * 1000;
     this.physics.world.setBounds(0, 44, c.width, c.height - 44);
-    this.add.grid(c.width / 2, c.height / 2, c.width, c.height, 40, 40,
-      c.colors.background, 1, 0x24334b, 0.45);
+    addYard(this);
+    // Dark strip behind the HUD so the text stays readable against the sky.
+    this.add.rectangle(c.width / 2, 22, c.width, 44, 0x0a1120, 0.55);
     this.hud = this.add.text(18, 12, '', { font: '18px monospace', color: '#ffffff' });
     this.aimLines = this.add.graphics();
     this.makeBirdTextures();
