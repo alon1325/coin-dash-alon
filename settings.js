@@ -4,6 +4,9 @@ window.COIN_DASH = {
   height: 500,
   roundSeconds: 20,
   playerSpeed: 360,
+  // Every treasureEvery-th pickup is a treasure chest worth treasureValue coins.
+  treasureEvery: 5,
+  treasureValue: 5,
   defaultDifficulty: 'normal',
   // brain: 'bounce' drifts and bounces, 'chase' steers toward the player,
   // 'hunter' stops to predict where the player will be, then rushes that spot.
@@ -19,7 +22,7 @@ window.COIN_DASH = {
                rushSpeed: 384, aimMs: 550, maxRushMs: 1100, cooldownMs: 1500 }
   },
   colors: { background: 0x101c31, player: 0x71e8ce, coin: 0xffd166, drone: 0xff657a, skull: 0xfff4e0,
-            belly: 0xd9fff6, wing: 0x3fb8a0,
+            belly: 0xd9fff6, wing: 0x3fb8a0, chest: 0xa0643c,
             yard: { skyTop: 0x4a90d9, skyLow: 0xbfe6ff, sun: 0xffe27a, hills: 0x7cc46a, grass: 0x5fb24f,
                     grassDark: 0x52a344, fence: 0xfaf3e3, flower: 0xff8fb1 } }
 };

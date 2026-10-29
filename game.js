@@ -115,9 +115,10 @@ class CoinDash extends Phaser.Scene {
     // Hitbox covers the round body only, not the beak or tail (texture pixels, before scaling).
     this.player.body.setCircle(14, 8, 8);
     this.player.body.setCollideWorldBounds(true);
-    this.coin = this.add.circle(100, 100, 9, c.colors.coin);
+    this.pickups = 0;
+    this.makeCoinTextures();
+    this.coin = this.add.image(100, 100, 'coin');
     this.physics.add.existing(this.coin);
-    this.coin.body.setCircle(9);
     this.placeCoin();
     this.makeSkullTexture();
     this.drones = this.physics.add.group();
@@ -137,7 +138,8 @@ class CoinDash extends Phaser.Scene {
     }
     this.physics.add.overlap(this.player, this.coin, () => {
       if (this.finished) return;
-      this.score++;
+      this.score += this.coin.isTreasure ? c.treasureValue : 1;
+      this.pickups++;
       this.placeCoin();
     });
     this.physics.add.overlap(this.player, this.drones, () => this.finish('A skull caught you!'));
@@ -145,6 +147,25 @@ class CoinDash extends Phaser.Scene {
     this.keys = this.input.keyboard.addKeys('W,A,S,D,R,M');
     this.input.keyboard.on('keydown-R', () => this.scene.restart({ difficulty: this.difficultyKey }));
     this.input.keyboard.on('keydown-M', () => this.scene.start('DifficultyMenu'));
+  }
+
+  // Draws an 18x18 'coin' and a 32x28 'treasure' chest once.
+  makeCoinTextures() {
+    if (this.textures.exists('treasure')) return;
+    const c = COIN_DASH;
+    const ink = 0x2b2140;
+    let g = this.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(c.colors.coin).fillCircle(9, 9, 9);
+    g.generateTexture('coin', 18, 18);
+    g.destroy();
+    g = this.make.graphics({ x: 0, y: 0 }, false);
+    g.fillStyle(ink).fillRoundedRect(0, 2, 32, 26, 6);
+    g.fillStyle(c.colors.chest).fillRoundedRect(2, 4, 28, 22, 5);
+    g.fillStyle(c.colors.coin).fillRect(2, 12, 28, 3).fillRect(14, 4, 4, 22);
+    g.fillStyle(ink).fillRect(2, 11, 28, 1).fillRoundedRect(12, 13, 8, 7, 2);
+    g.fillStyle(c.colors.coin).fillCircle(16, 16, 1.5);
+    g.generateTexture('treasure', 32, 28);
+    g.destroy();
   }
 
   // Draws a friendly cartoon skull once and stores it as the 64x64 'skull' texture.
@@ -202,6 +223,11 @@ class CoinDash extends Phaser.Scene {
       x = Phaser.Math.Between(25, c.width - 25);
       y = Phaser.Math.Between(70, c.height - 25);
     } while (Phaser.Math.Distance.Between(x, y, this.player.x, this.player.y) < 60);
+    this.coin.isTreasure = (this.pickups + 1) % c.treasureEvery === 0;
+    this.coin.setTexture(this.coin.isTreasure ? 'treasure' : 'coin');
+    // Hitbox is a circle centred on the texture (texture pixels).
+    if (this.coin.isTreasure) this.coin.body.setCircle(14, 2, 0);
+    else this.coin.body.setCircle(9);
     this.coin.setPosition(x, y);
     this.coin.body.reset(x, y);
   }
