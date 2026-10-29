@@ -15,8 +15,8 @@ window.COIN_DASH = {
     hard:    { label: 'Hard',    blurb: 'Four skulls that follow you',
                droneCount: 4, droneSpeed: 140, brain: 'chase', turnRate: 1.6 },
     extreme: { label: 'Extreme', blurb: 'Skulls calculate your path and rush you',
-               droneCount: 4, droneSpeed: 120, brain: 'hunter', turnRate: 1.2,
-               rushSpeed: 640, aimMs: 550, maxRushMs: 1100, cooldownMs: 1500 }
+               droneCount: 4, droneSpeed: 72,  brain: 'hunter', turnRate: 1.2,
+               rushSpeed: 384, aimMs: 550, maxRushMs: 1100, cooldownMs: 1500 }
   },
   colors: { background: 0x101c31, player: 0x71e8ce, coin: 0xffd166, drone: 0xff657a, skull: 0xfff4e0,
             belly: 0xd9fff6, wing: 0x3fb8a0 }
