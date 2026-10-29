@@ -18,5 +18,6 @@ window.COIN_DASH = {
                droneCount: 4, droneSpeed: 120, brain: 'hunter', turnRate: 1.2,
                rushSpeed: 640, aimMs: 550, maxRushMs: 1100, cooldownMs: 1500 }
   },
-  colors: { background: 0x101c31, player: 0x71e8ce, coin: 0xffd166, drone: 0xff657a, skull: 0xfff4e0 }
+  colors: { background: 0x101c31, player: 0x71e8ce, coin: 0xffd166, drone: 0xff657a, skull: 0xfff4e0,
+            belly: 0xd9fff6, wing: 0x3fb8a0 }
 };
